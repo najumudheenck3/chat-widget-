@@ -33,33 +33,6 @@ function initializeSocket(serverInstance) {
   // Socket.IO connection logic
   io.on("connection", (socket) => {
     console.log(`Connected to socket.io ${socket.id}`.magenta.bold);
-
-    // socket.on('setup', (userData) => {
-    //     const userIdRoom = `user-${userData.id}`;
-    //     socket.join(userIdRoom);
-    //     console.log(`User ${userData.id} connected to room ${userIdRoom}`.america);
-    // });
-    // socket.on('customerSetup', (customerData) => {
-    //     const customerIdRoom = `customer-${customerData.id}`;
-    //     socket.join(customerIdRoom);
-    //     console.log(`customer ${customerData.id} connected to room ${customerIdRoom}`.america);
-    // });
-    // socket.on("join chat", (conversationId) => {
-    //     socket.join(conversationId);
-    //     console.log(`User Joined Conversation:${conversationId}`.bgCyan);
-    // });
-    // socket.on("new message", (newMessageRecieved) => {
-    //     const senderType = newMessageRecieved.message.senderType
-    //     const chatDetails = newMessageRecieved.chatDetails
-    //     if (senderType === "user") {
-    //         const sendTo = chatDetails.customerId
-    //         socket.in(`customer-${sendTo}`).emit("message received", newMessageRecieved);
-    //     } else {
-    //         const sendTo = chatDetails.userId
-    //         socket.in(`user-${sendTo}`).emit("message received", newMessageRecieved);
-    //     }
-    // });
-
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
     });
@@ -94,13 +67,11 @@ const chatMessages = [
   },
 ];
 app.get("/sample", (req, res, next) => {
-  console.log("ok ok");
   return res.send({
     message: "oka oka",
   });
 });
 app.get("/allMessages", (req, res, next) => {
-  console.log("ok ok");
   return res.send({
     status: true,
     data: chatMessages,
@@ -171,6 +142,4 @@ serverInstance.listen(
   PORT,
   console.log(`server started on port ${PORT}`.yellow.bold)
 );
-// app.listen(PORT, () => {
-//   console.log("server is running on: ", PORT);
-// });
+
