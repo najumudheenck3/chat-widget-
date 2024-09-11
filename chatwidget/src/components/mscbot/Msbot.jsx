@@ -7,33 +7,38 @@ import EmojiPicker from "emoji-picker-react";
 
 const ENDPOINT = "http://localhost:8890";
 let socket;
+
 const Msbot = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [userInput, setUserInput] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState({
+    name: "",
+    contact: "",
+    email: "",
+  });
+  const [isRegistered, setIsRegistered] = useState(false); // Flag for customer registration
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Emoji picker toggle
 
   const chatboxRef = useRef(null);
 
   useEffect(() => {
-    socket = io(ENDPOINT, { forceNew: true });
-    socket.on('connect_error', (err) => {
-      console.error('Connection failed:', err);
-    });
- 
-    // Define handleMessageReceived inside the component
-    const handleMessageReceived = (newMessageReceived) => {
-      setChatMessages((prevMessages) => [...prevMessages, newMessageReceived]);
+    socket = io(ENDPOINT);
+    return () => {
+      socket.disconnect();
     };
+  }, []);
 
-    // Listen to the socket event for receiving new messages
+  useEffect(() => {
+    const handleMessageReceived = (newMessageRecieved) => {
+      setChatMessages((prevMessages) => [...prevMessages, newMessageRecieved]);
+    };
     socket.on("message received", handleMessageReceived);
 
     return () => {
       socket.off("message received", handleMessageReceived);
-      socket.disconnect(); // Cleanup
     };
-  }, []); // Only run this once on mount
+  }, [socket]);
 
   useEffect(() => {
     const getChatData = async () => {
@@ -65,25 +70,19 @@ const Msbot = () => {
 
   const handleSendButton = async () => {
     const userText = userInput.trim();
-    if (userText !== "") {
+    if (userText !== "" && isRegistered) {
       setUserInput("");
       const content = {
-        sender: "user",
+        sender: "customer",
+        customerInfo: {
+          name: customerInfo.name,
+          contact: customerInfo.contact,
+          email: customerInfo.email,
+        },
         content: userText,
         timestamp: getTime(),
       };
-      // const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
-        try {
-      const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
-      // Use the response data if necessary, for example:
-      if (data.status) {
-        console.log("Message sent successfully:", data.message);
-      } else {
-        console.error("Error sending message:", data.error);
-      }
-    } catch (error) {
-      console.error("Error in sending message:", error);
-    }
+      await axios.post(ENDPOINT + "/customerMessage", content);
       setChatMessages((prevMessages) => [...prevMessages, content]);
     }
   };
@@ -116,6 +115,12 @@ const Msbot = () => {
     ));
   };
 
+  // Handle customer registration
+  const handleRegisterCustomer = () => {
+    localStorage.setItem("customerInfo", JSON.stringify(customerInfo));
+    setIsRegistered(true);
+  };
+
   useEffect(() => {
     if (chatboxRef.current) {
       chatboxRef.current.scrollTop = chatboxRef.current.scrollHeight;
@@ -142,38 +147,86 @@ const Msbot = () => {
                 ref={chatboxRef}
                 style={{ maxHeight: "450px", overflowY: "scroll" }}
               >
-                {renderChatMessages()}
+                {/* If the customer is not registered, show the registration form */}
+                {!isRegistered ? (
+                  <div className="registration-form">
+                    <h2>Register to Chat</h2>
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={customerInfo.name}
+                      onChange={(e) =>
+                        setCustomerInfo({
+                          ...customerInfo,
+                          name: e.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      type="text"
+                      placeholder="Contact"
+                      value={customerInfo.contact}
+                      onChange={(e) =>
+                        setCustomerInfo({
+                          ...customerInfo,
+                          contact: e.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={customerInfo.email}
+                      onChange={(e) =>
+                        setCustomerInfo({
+                          ...customerInfo,
+                          email: e.target.value,
+                        })
+                      }
+                    />
+                    <button onClick={handleRegisterCustomer}>
+                      Register
+                    </button>
+                  </div>
+                ) : (
+                  // Chat messages display after registration
+                  <>
+                    {renderChatMessages()}
+                  </>
+                )}
               </div>
 
-              <div className="chat-bar-input-block">
-                <div id="userInput">
-                  <input
-                    id="textInput"
-                    className="input-box"
-                    type="text"
-                    name="msg"
-                    placeholder="Tap 'Enter' to send a message"
-                    value={userInput}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                  />
-                </div>
+              {isRegistered && (
+                <div className="chat-bar-input-block">
+                  <div id="userInput">
+                    <input
+                      id="textInput"
+                      className="input-box"
+                      type="text"
+                      name="msg"
+                      placeholder="Tap 'Enter' to send a message"
+                      value={userInput}
+                      onChange={handleInputChange}
+                      onKeyPress={handleKeyPress}
+                    />
+                  </div>
 
-                <div className="chat-bar-icons">
-                  <i
-                    id="chat-icon"
-                    style={{ color: "#013542" }}
-                    className="fas fa-face-smile"
-                    onClick={toggleEmojiPicker}
-                  ></i>
-                  <i
-                    id="chat-icon"
-                    style={{ color: "#013542" }}
-                    className="fas fa-paper-plane"
-                    onClick={handleSendButton}
-                  ></i>
+                  <div className="chat-bar-icons">
+                    <i
+                      id="chat-icon"
+                      style={{ color: "#013542" }}
+                      className="fas fa-face-smile"
+                      onClick={toggleEmojiPicker}
+                    ></i>
+                    <i
+                      id="chat-icon"
+                      style={{ color: "#013542" }}
+                      className="fas fa-paper-plane"
+                      onClick={handleSendButton}
+                    ></i>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Emoji Picker Component */}
               {showEmojiPicker && (

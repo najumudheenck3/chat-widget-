@@ -83,6 +83,7 @@ app.post("/customerMessage", (req, res, next) => {
   chatMessages.push(req.body);
    return res.send({
      status: true,
+     content: req.body.content,
      message: "Message Sent",
    });
 });
