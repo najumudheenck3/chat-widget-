@@ -68,6 +68,7 @@ const chatMessages = [
 ];
 app.get("/sample", (req, res, next) => {
   return res.send({
+    status:true,
     message: "oka oka",
   });
 });
@@ -80,9 +81,10 @@ app.get("/allMessages", (req, res, next) => {
 
 app.post("/customerMessage", (req, res, next) => {
   chatMessages.push(req.body);
-  return res.send({
-    message: "oka oka",
-  });
+   return res.send({
+     status: true,
+     message: "oka oka",
+   });
 });
 
 app.post("/userMessage", (req, res, next) => {

@@ -20,7 +20,7 @@ const Msbot = () => {
     socket.on('connect_error', (err) => {
       console.error('Connection failed:', err);
     });
-
+ 
     // Define handleMessageReceived inside the component
     const handleMessageReceived = (newMessageReceived) => {
       setChatMessages((prevMessages) => [...prevMessages, newMessageReceived]);
@@ -72,7 +72,18 @@ const Msbot = () => {
         content: userText,
         timestamp: getTime(),
       };
+      // const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
+        try {
       const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
+      // Use the response data if necessary, for example:
+      if (data.status) {
+        console.log("Message sent successfully:", data.message);
+      } else {
+        console.error("Error sending message:", data.error);
+      }
+    } catch (error) {
+      console.error("Error in sending message:", error);
+    }
       setChatMessages((prevMessages) => [...prevMessages, content]);
     }
   };
