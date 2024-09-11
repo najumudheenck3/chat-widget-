@@ -11,31 +11,33 @@ const Msbot = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [userInput, setUserInput] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // State to toggle emoji picker
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const chatboxRef = useRef(null);
 
   useEffect(() => {
-    socket = io(ENDPOINT);
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+    socket = io(ENDPOINT, { forceNew: true });
+    socket.on('connect_error', (err) => {
+      console.error('Connection failed:', err);
+    });
 
-  useEffect(() => {
-    const handleMessageReceived = (newMessageRecieved) => {
-      setChatMessages((prevMessages) => [...prevMessages, newMessageRecieved]);
+    // Define handleMessageReceived inside the component
+    const handleMessageReceived = (newMessageReceived) => {
+      setChatMessages((prevMessages) => [...prevMessages, newMessageReceived]);
     };
+
+    // Listen to the socket event for receiving new messages
     socket.on("message received", handleMessageReceived);
 
     return () => {
       socket.off("message received", handleMessageReceived);
+      socket.disconnect(); // Cleanup
     };
-  }, [socket]);
+  }, []); // Only run this once on mount
 
   useEffect(() => {
     const getChatData = async () => {
-      const { data } = await axios.get("http://localhost:8890/allMessages");
+      const { data } = await axios.get(ENDPOINT + "/allMessages");
       if (data && data.status === false) {
         setChatMessages([]);
       }
@@ -61,7 +63,7 @@ const Msbot = () => {
     }
   };
 
-  const handleSendButton = async (action = "send") => {
+  const handleSendButton = async () => {
     const userText = userInput.trim();
     if (userText !== "") {
       setUserInput("");
@@ -70,10 +72,7 @@ const Msbot = () => {
         content: userText,
         timestamp: getTime(),
       };
-      const { data } = await axios.post(
-        "http://localhost:8890/customerMessage",
-        content
-      );
+      const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
       setChatMessages((prevMessages) => [...prevMessages, content]);
     }
   };
