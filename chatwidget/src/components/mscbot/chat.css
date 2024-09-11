@@ -11,7 +11,7 @@
 }
 
 .collapsible {
-    background-color: #013542;
+    background-color: #062d54;
     color: white;
     cursor: pointer;
     padding: 18px;
@@ -117,7 +117,7 @@
 .userText span {
     line-height: 1.5em;
     display: inline-block;
-    background: #5ca6fa;
+    background: #aab7c5;
     padding: 10px;
     border-radius: 8px;
     border-bottom-right-radius: 2px;
@@ -181,4 +181,78 @@
         border-top: 3px solid white;
         border-radius: 0px;
     }
+}
+
+
+
+.registration-form,
+.chat-messages {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+
+.registration-form {
+  h2 {
+    margin-bottom: 20px;
+    color: #062d54;
+  }
+
+  input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  button {
+    width: 100%;
+    padding: 10px;
+    background-color: #062d54;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+}
+
+
+.chat-messages {
+  .message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+
+    &.customer {
+      background: #e7f0ff;
+      border-radius: 4px;
+    }
+
+    &.bot {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+  }
+}
+
+.error-message {
+  color: rgb(128, 28, 28);
+  font-size: 14px;
+  margin-bottom: 10px;
 }

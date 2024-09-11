@@ -4,6 +4,7 @@ import "./home.css";
 import axios from "axios";
 import io from "socket.io-client";
 import EmojiPicker from "emoji-picker-react";
+import CryptoJS from 'crypto-js'; // Import crypto-js for hashing
 
 const ENDPOINT = "http://localhost:8890";
 let socket;
@@ -17,17 +18,24 @@ const Msbot = () => {
     contact: "",
     email: "",
   });
+  const [error, setError] = useState('');
+
+
   const [isRegistered, setIsRegistered] = useState(false); // Flag for customer registration
   const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Emoji picker toggle
 
   const chatboxRef = useRef(null);
 
   useEffect(() => {
-    socket = io(ENDPOINT);
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+  
+  socket = io(ENDPOINT, {
+    path: "/widgetsocket.io",
+  });
+
+  return () => {
+    socket.disconnect(); 
+  };
+}, []);
 
   useEffect(() => {
     const handleMessageReceived = (newMessageRecieved) => {
@@ -76,9 +84,10 @@ const Msbot = () => {
         sender: "customer",
         customerInfo: {
           name: customerInfo.name,
-          contact: customerInfo.contact,
+          mobile: customerInfo.contact,
           email: customerInfo.email,
         },
+        ChatId: generateUniqueChatId(customerInfo.contact, customerInfo.email),
         content: userText,
         timestamp: getTime(),
       };
@@ -86,7 +95,12 @@ const Msbot = () => {
       setChatMessages((prevMessages) => [...prevMessages, content]);
     }
   };
-
+  // Function to generate a unique ChatId based on contact and email
+ const generateUniqueChatId = (contact, email) => {
+    const combined = `${contact}-${email}`;
+    const hash = CryptoJS.SHA256(combined).toString(CryptoJS.enc.Base64); // Create a hash and encode it to Base64
+    return 'web-'+hash.substring(0, 16); // Ensure ChatId is no longer than 16 characters
+  };
   const handleEmojiClick = (emojiData) => {
     setUserInput(userInput + emojiData.emoji);
   };
@@ -115,11 +129,30 @@ const Msbot = () => {
     ));
   };
 
-  // Handle customer registration
-  const handleRegisterCustomer = () => {
-    localStorage.setItem("customerInfo", JSON.stringify(customerInfo));
-    setIsRegistered(true);
-  };
+ const handleRegisterCustomer = () => {
+  const { name, contact, email } = customerInfo;
+
+  // Validate the inputs
+  if (!name) {
+    setError('Name is mandatory');
+    return;
+  }
+
+  if (!contact && !email) {
+    setError('Either contact or email is required');
+    return;
+  }
+
+  // Clear previous error and proceed with registration
+  setError('');
+
+  // Save customer info to local storage
+  localStorage.setItem("customerInfo", JSON.stringify(customerInfo));
+
+  // Set registration status
+  setIsRegistered(true);
+};
+
 
   useEffect(() => {
     if (chatboxRef.current) {
@@ -147,10 +180,10 @@ const Msbot = () => {
                 ref={chatboxRef}
                 style={{ maxHeight: "450px", overflowY: "scroll" }}
               >
-                {/* If the customer is not registered, show the registration form */}
                 {!isRegistered ? (
                   <div className="registration-form">
                     <h2>Register to Chat</h2>
+                   
                     <input
                       type="text"
                       placeholder="Name"
@@ -184,12 +217,12 @@ const Msbot = () => {
                         })
                       }
                     />
+                     {error && <p className="error-message">{error}</p>}
                     <button onClick={handleRegisterCustomer}>
                       Register
                     </button>
                   </div>
                 ) : (
-                  // Chat messages display after registration
                   <>
                     {renderChatMessages()}
                   </>
@@ -228,7 +261,6 @@ const Msbot = () => {
                 </div>
               )}
 
-              {/* Emoji Picker Component */}
               {showEmojiPicker && (
                 <div className="emoji-picker-container">
                   <EmojiPicker onEmojiClick={handleEmojiClick} />

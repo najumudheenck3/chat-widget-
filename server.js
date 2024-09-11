@@ -7,6 +7,7 @@ const socketIo = require("socket.io");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
+const axios = require("axios");
 
 let app = express();
 app.use(express.json());
@@ -20,7 +21,19 @@ app.use(
 // Thi 0 t tatic fi og fi th
 app.use(express.static(path.join(__dirname, "chatwidget/dist")));
 
-serverInstance = http.createServer(app);
+// Create server instance based on environment
+let serverInstance;
+if (process.env.NODE_ENV === "development") {
+  // In development, create an HTTP server
+  serverInstance = http.createServer(app);
+} else {
+  // In production, create an HTTPS server with SSL key and certificate
+  const options = {
+    key: fs.readFileSync(process.env.SSL_KEY), // SSL Key from .env
+    cert: fs.readFileSync(process.env.SSL_CRT), // SSL Cert from .env
+  };
+  serverInstance = https.createServer(options, app);
+}
 // Initialize Socket.IO function
 function initializeSocket(serverInstance) {
   const io = socketIo(serverInstance, {
@@ -28,6 +41,7 @@ function initializeSocket(serverInstance) {
     cors: {
       origin: true,
     },
+     path: "/widgetsocket.io", 
   });
 
   // Socket.IO connection logic
@@ -79,14 +93,62 @@ app.get("/allMessages", (req, res, next) => {
   });
 });
 
-app.post("/customerMessage", (req, res, next) => {
-  chatMessages.push(req.body);
-   return res.send({
-     status: true,
-     content: req.body.content,
-     message: "Message Sent",
-   });
+
+
+app.post("/customerMessage", async (req, res, next) => {
+  try {
+    // Add the incoming message to the chatMessages array
+    chatMessages.push(req.body);
+
+    // Send the payload (req.body) to the outbound webhook URL
+    const webhookUrl = process.env.outboundWebhook;
+console.log('webhookUrl', webhookUrl);
+    // Making POST request to the webhook
+    let responseContent = 'Message sent and forwarded to the webhook'
+    if (req.body.customerInfo){
+      let chatPayload = req.body.customerInfo;
+      chatPayload.appId = process.env.outboundAppID;
+      chatPayload.type = 'text';
+      chatPayload.channel = 'web';
+      chatPayload.ChatId = req.body.ChatId,
+       chatPayload.messages = [{
+         senderType: "customer",
+         timestamp: Date.now().toString(), // Current timestamp
+         channelId: 129731, 
+         type: "message",
+         text: {
+           content: req.body.content, // Using the content sent by the customer
+         },
+       }, ];
+       const headers = {
+         'token-id': process.env.outboundAppToken,
+         'client-id': process.env.outboundAppClient,
+       };
+
+      await axios.post(webhookUrl, chatPayload, {
+        headers
+      });
+
+    }else{  
+      responseContent = 'Message Not forwarded to the webhook: no customer Data'
+    }
+
+    // Respond to the client that the message was sent successfully
+    return res.send({
+      status: true,
+      content: responseContent,
+      message: "Message sent and forwarded to the webhook",
+    });
+  } catch (error) {
+    console.error("Error sending to webhook:", error.message);
+    // Handle the error and respond with an appropriate message
+    return res.status(200).send({
+      status: true,
+      message: "webhook Error",
+    });
+  }
 });
+
 
 app.post("/userMessage", (req, res, next) => {
     // Get the current time
@@ -140,9 +202,8 @@ app.post("/userMessage", (req, res, next) => {
   
 
 console.log(process.env.PORT);
+// Start the server
 const PORT = process.env.PORT || 8890;
-serverInstance.listen(
-  PORT,
-  console.log(`server started on port ${PORT}`.yellow.bold)
-);
-
+serverInstance.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`.yellow.bold);
+});
