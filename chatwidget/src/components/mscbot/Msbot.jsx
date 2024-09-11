@@ -159,123 +159,250 @@ const Msbot = () => {
       chatboxRef.current.scrollTop = chatboxRef.current.scrollHeight;
     }
   }, [chatMessages]);
-
-  return (
-    <div className="chat-bar-collapsible">
+ return (
+  <div className="chat-bar-collapsible">
+    {!chatOpen ? (
       <button
         id="chat-button"
+        type="button"
+        className="collapsible collapsed"
+        onClick={handleToggleChat}
+      >
+        <i className="fas fa-message"></i>
+      </button>
+    ) : (
+      <button
+        id="chat-button-expanded"
         type="button"
         className={`collapsible ${chatOpen ? "active" : ""}`}
         onClick={handleToggleChat}
       >
         Chat with us!
       </button>
+    )}
 
-      {chatOpen && (
-        <div className="full-chat-block">
-          <div className="outer-container">
-            <div className="chat-container">
-              <div
-                id="chatbox"
-                ref={chatboxRef}
-                style={{ maxHeight: "450px", overflowY: "scroll" }}
-              >
-                {!isRegistered ? (
-                  <div className="registration-form">
-                    <h2>Register to Chat</h2>
-                   
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={customerInfo.name}
-                      onChange={(e) =>
-                        setCustomerInfo({
-                          ...customerInfo,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Contact"
-                      value={customerInfo.contact}
-                      onChange={(e) =>
-                        setCustomerInfo({
-                          ...customerInfo,
-                          contact: e.target.value,
-                        })
-                      }
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={customerInfo.email}
-                      onChange={(e) =>
-                        setCustomerInfo({
-                          ...customerInfo,
-                          email: e.target.value,
-                        })
-                      }
-                    />
-                     {error && <p className="error-message">{error}</p>}
-                    <button onClick={handleRegisterCustomer}>
-                      Register
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {renderChatMessages()}
-                  </>
-                )}
-              </div>
-
-              {isRegistered && (
-                <div className="chat-bar-input-block">
-                  <div id="userInput">
-                    <input
-                      id="textInput"
-                      className="input-box"
-                      type="text"
-                      name="msg"
-                      placeholder="Tap 'Enter' to send a message"
-                      value={userInput}
-                      onChange={handleInputChange}
-                      onKeyPress={handleKeyPress}
-                    />
-                  </div>
-
-                  <div className="chat-bar-icons">
-                    <i
-                      id="chat-icon"
-                      style={{ color: "#013542" }}
-                      className="fas fa-face-smile"
-                      onClick={toggleEmojiPicker}
-                    ></i>
-                    <i
-                      id="chat-icon"
-                      style={{ color: "#013542" }}
-                      className="fas fa-paper-plane"
-                      onClick={handleSendButton}
-                    ></i>
-                  </div>
+    {chatOpen && (
+      <div className="full-chat-block">
+        <div className="outer-container">
+          <div className="chat-container">
+            <div
+              id="chatbox"
+              ref={chatboxRef}
+              style={{ maxHeight: "450px", overflowY: "scroll" }}
+            >
+              {!isRegistered ? (
+                <div className="registration-form">
+                  <h2>Register to Chat</h2>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={customerInfo.name}
+                    onChange={(e) =>
+                      setCustomerInfo({
+                        ...customerInfo,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="Contact"
+                    value={customerInfo.contact}
+                    onChange={(e) =>
+                      setCustomerInfo({
+                        ...customerInfo,
+                        contact: e.target.value,
+                      })
+                    }
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={customerInfo.email}
+                    onChange={(e) =>
+                      setCustomerInfo({
+                        ...customerInfo,
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                   {error && <p className="error-message">{error}</p>}
+                  <button onClick={handleRegisterCustomer}>
+                    Register
+                  </button>
                 </div>
+              ) : (
+                <>
+                  {renderChatMessages()}
+                </>
               )}
+            </div>
 
-              {showEmojiPicker && (
-                <div className="emoji-picker-container">
-                  <EmojiPicker onEmojiClick={handleEmojiClick} />
+            {isRegistered && (
+              <div className="chat-bar-input-block">
+                <div id="userInput">
+                  <input
+                    id="textInput"
+                    className="input-box"
+                    type="text"
+                    name="msg"
+                    placeholder="Tap 'Enter' to send a message"
+                    value={userInput}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                  />
                 </div>
-              )}
 
-              <div id="chat-bar-bottom">
-                <p></p>
+                <div className="chat-bar-icons">
+                  <i
+                    id="chat-icon"
+                    style={{ color: "#013542" }}
+                    className="fas fa-face-smile"
+                    onClick={toggleEmojiPicker}
+                  ></i>
+                  <i
+                    id="chat-icon"
+                    style={{ color: "#013542" }}
+                    className="fas fa-paper-plane"
+                    onClick={handleSendButton}
+                  ></i>
+                </div>
               </div>
+            )}
+
+            {showEmojiPicker && (
+              <div className="emoji-picker-container">
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+
+            <div id="chat-bar-bottom">
+              <p></p>
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
+
+
+  // return (
+  //   <div className="chat-bar-collapsible">
+  //     <button
+  //       id="chat-button"
+  //       type="button"
+  //       className={`collapsible ${chatOpen ? "active" : ""}`}
+  //       onClick={handleToggleChat}
+  //     >
+  //       Chat with us!
+  //     </button>
+
+  //     {chatOpen && (
+  //       <div className="full-chat-block">
+  //         <div className="outer-container">
+  //           <div className="chat-container">
+  //             <div
+  //               id="chatbox"
+  //               ref={chatboxRef}
+  //               style={{ maxHeight: "450px", overflowY: "scroll" }}
+  //             >
+  //               {!isRegistered ? (
+  //                 <div className="registration-form">
+  //                   <h2>Register to Chat</h2>
+                   
+  //                   <input
+  //                     type="text"
+  //                     placeholder="Name"
+  //                     value={customerInfo.name}
+  //                     onChange={(e) =>
+  //                       setCustomerInfo({
+  //                         ...customerInfo,
+  //                         name: e.target.value,
+  //                       })
+  //                     }
+  //                   />
+  //                   <input
+  //                     type="text"
+  //                     placeholder="Contact"
+  //                     value={customerInfo.contact}
+  //                     onChange={(e) =>
+  //                       setCustomerInfo({
+  //                         ...customerInfo,
+  //                         contact: e.target.value,
+  //                       })
+  //                     }
+  //                   />
+  //                   <input
+  //                     type="email"
+  //                     placeholder="Email"
+  //                     value={customerInfo.email}
+  //                     onChange={(e) =>
+  //                       setCustomerInfo({
+  //                         ...customerInfo,
+  //                         email: e.target.value,
+  //                       })
+  //                     }
+  //                   />
+  //                    {error && <p className="error-message">{error}</p>}
+  //                   <button onClick={handleRegisterCustomer}>
+  //                     Register
+  //                   </button>
+  //                 </div>
+  //               ) : (
+  //                 <>
+  //                   {renderChatMessages()}
+  //                 </>
+  //               )}
+  //             </div>
+
+  //             {isRegistered && (
+  //               <div className="chat-bar-input-block">
+  //                 <div id="userInput">
+  //                   <input
+  //                     id="textInput"
+  //                     className="input-box"
+  //                     type="text"
+  //                     name="msg"
+  //                     placeholder="Tap 'Enter' to send a message"
+  //                     value={userInput}
+  //                     onChange={handleInputChange}
+  //                     onKeyPress={handleKeyPress}
+  //                   />
+  //                 </div>
+
+  //                 <div className="chat-bar-icons">
+  //                   <i
+  //                     id="chat-icon"
+  //                     style={{ color: "#013542" }}
+  //                     className="fas fa-face-smile"
+  //                     onClick={toggleEmojiPicker}
+  //                   ></i>
+  //                   <i
+  //                     id="chat-icon"
+  //                     style={{ color: "#013542" }}
+  //                     className="fas fa-paper-plane"
+  //                     onClick={handleSendButton}
+  //                   ></i>
+  //                 </div>
+  //               </div>
+  //             )}
+
+  //             {showEmojiPicker && (
+  //               <div className="emoji-picker-container">
+  //                 <EmojiPicker onEmojiClick={handleEmojiClick} />
+  //               </div>
+  //             )}
+
+  //             <div id="chat-bar-bottom">
+  //               <p></p>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 };
 
 export default Msbot;
