@@ -156,15 +156,15 @@ app.post("/userMessage", (req, res, next) => {
     const hours = currentTime.getHours().toString().padStart(2, "0");
     const minutes = currentTime.getMinutes().toString().padStart(2, "0");
     const formattedTime = `${hours}:${minutes}`;
-  
+  console.log('req.body', req.body);
     chatMessages.push({
       sender: "bot",
-      content: req.body.content,
+      content: req.body.message.content,
       timestamp: formattedTime, // Use the dynamically generated time here
     });
     io.sockets.emit("message received", {
       sender: "bot",
-      content: req.body.content,
+      content: req.body.message.content,
       timestamp: formattedTime, // Use the dynamically generated time here
     });
     console.log(chatMessages.length);
