@@ -1,6 +1,7 @@
 let express = require("express");
 require("dotenv").config();
 let cors = require("cors");
+const bodyParser = require("body-parser");
 let path = require("path");
 const colors = require("colors");
 const socketIo = require("socket.io");
@@ -10,15 +11,47 @@ const https = require("https");
 const axios = require("axios");
 
 let app = express();
-app.use(express.json());
-
+app.use(
+  bodyParser.json({
+    limit: "10mb",
+  })
+); // Adjust the limit as needed
+app.use(
+  bodyParser.urlencoded({
+    limit: "10mb",
+    extended: true,
+  })
+); // Adjust the limit as needed
+const allowedOrigins = process.env.SYS_ORIGIN.split(",");
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+};
 app.use(
   cors({
     origin: true,
   })
 );
+app.use(cors(corsOptions));
 // console.log(path.join(__dirname, "./chatwidget/build"));
 // Thi 0 t tatic fi og fi th
+app.use(bodyParser.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+app.use(
+  bodyParser.urlencoded({
+    extended: false,
+  })
+);
+// parse requests of content-type - application/x-www-form-urlencoded
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 app.use(express.static(path.join(__dirname, "chatwidget/dist")));
 
 // Create server instance based on environment
@@ -38,9 +71,9 @@ if (process.env.NODE_ENV === "development") {
 function initializeSocket(serverInstance) {
   const io = socketIo(serverInstance, {
     pingTimeout: 60000,
-    cors: {
-      origin: true,
-    },
+   cors: {
+     origin: allowedOrigins,
+   },
     path: "/widgetsocket.io",
   });
 
@@ -97,6 +130,7 @@ app.post("/customerMessage", async (req, res, next) => {
   try {
     // Add the incoming message to the chatMessages array
     chatMessages.push(req.body);
+    console.log("req.body", req.body);
 
     // Send the payload (req.body) to the outbound webhook URL
     const webhookUrl = process.env.outboundWebhook;
