@@ -69,11 +69,13 @@ if (process.env.NODE_ENV === "development") {
 }
 // Initialize Socket.IO function
 function initializeSocket(serverInstance) {
+  const isDevelopment = process.env.NODE_ENV === "development";
+
   const io = socketIo(serverInstance, {
     pingTimeout: 60000,
-   cors: {
-     origin: allowedOrigins,
-   },
+    cors: {
+      origin: isDevelopment ? "*" : allowedOrigins, // Allow all origins in development
+    },
     path: "/widgetsocket.io",
   });
 
@@ -87,6 +89,7 @@ function initializeSocket(serverInstance) {
 
   return io; // Return the io instance
 }
+
 
 // Initializing Socket.IO
 const io = initializeSocket(serverInstance);
