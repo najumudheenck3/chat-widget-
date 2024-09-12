@@ -41,7 +41,7 @@ function initializeSocket(serverInstance) {
     cors: {
       origin: true,
     },
-     path: "/widgetsocket.io", 
+    path: "/widgetsocket.io",
   });
 
   // Socket.IO connection logic
@@ -82,7 +82,7 @@ const chatMessages = [
 ];
 app.get("/sample", (req, res, next) => {
   return res.send({
-    status:true,
+    status: true,
     message: "oka oka",
   });
 });
@@ -93,8 +93,6 @@ app.get("/allMessages", (req, res, next) => {
   });
 });
 
-
-
 app.post("/customerMessage", async (req, res, next) => {
   try {
     // Add the incoming message to the chatMessages array
@@ -102,35 +100,37 @@ app.post("/customerMessage", async (req, res, next) => {
 
     // Send the payload (req.body) to the outbound webhook URL
     const webhookUrl = process.env.outboundWebhook;
-console.log('webhookUrl', webhookUrl);
+    console.log("webhookUrl", webhookUrl);
     // Making POST request to the webhook
-    let responseContent = 'Message sent and forwarded to the webhook'
-    if (req.body.customerInfo){
+    let responseContent = "Message sent and forwarded to the webhook";
+    if (req.body.customerInfo) {
       let chatPayload = req.body.customerInfo;
       chatPayload.appId = process.env.outboundAppID;
-      chatPayload.type = 'text';
-      chatPayload.channel = 'web';
-      chatPayload.ChatId = req.body.ChatId,
-       chatPayload.messages = [{
-         senderType: "customer",
-         timestamp: Date.now().toString(), // Current timestamp
-         channelId: 129731, 
-         type: "message",
-         text: {
-           content: req.body.content, // Using the content sent by the customer
-         },
-       }, ];
-       const headers = {
-         'token-id': process.env.outboundAppToken,
-         'client-id': process.env.outboundAppClient,
-       };
+      chatPayload.type = "text";
+      chatPayload.channel = "web";
+      (chatPayload.ChatId = req.body.ChatId),
+        (chatPayload.messages = [
+          {
+            senderType: "customer",
+            timestamp: Date.now().toString(), // Current timestamp
+            channelId: 129731,
+            type: "message",
+            text: {
+              content: req.body.content, // Using the content sent by the customer
+            },
+          },
+        ]);
+      const headers = {
+        "token-id": process.env.outboundAppToken,
+        "client-id": process.env.outboundAppClient,
+      };
 
       await axios.post(webhookUrl, chatPayload, {
-        headers
+        headers,
       });
-
-    }else{  
-      responseContent = 'Message Not forwarded to the webhook: no customer Data'
+    } else {
+      responseContent =
+        "Message Not forwarded to the webhook: no customer Data";
     }
 
     // Respond to the client that the message was sent successfully
@@ -149,57 +149,55 @@ console.log('webhookUrl', webhookUrl);
   }
 });
 
-
 app.post("/userMessage", (req, res, next) => {
-    // Get the current time
-    const currentTime = new Date();
-    const hours = currentTime.getHours().toString().padStart(2, "0");
-    const minutes = currentTime.getMinutes().toString().padStart(2, "0");
-    const formattedTime = `${hours}:${minutes}`;
-  console.log('req.body', req.body);
-    chatMessages.push({
-      sender: "bot",
-      content: req.body.message.content,
-      timestamp: formattedTime, // Use the dynamically generated time here
-    });
-    io.sockets.emit("message received", {
-      sender: "bot",
-      content: req.body.message.content,
-      timestamp: formattedTime, // Use the dynamically generated time here
-    });
-    console.log(chatMessages.length);
-    return res.send({
-      message: "oka oka",
-    });
+  // Get the current time
+  const currentTime = new Date();
+  const hours = currentTime.getHours().toString().padStart(2, "0");
+  const minutes = currentTime.getMinutes().toString().padStart(2, "0");
+  const formattedTime = `${hours}:${minutes}`;
+  console.log("req.body", req.body);
+  chatMessages.push({
+    sender: "bot",
+    content: req.body.message.content,
+    timestamp: formattedTime, // Use the dynamically generated time here
+  });
+  io.sockets.emit("message received", {
+    sender: "bot",
+    content: req.body.message.content,
+    timestamp: formattedTime, // Use the dynamically generated time here
+  });
+  console.log(chatMessages.length);
+  return res.send({
+    message: "oka oka",
+  });
+});
+
+app.get("/getfiles", (req, res, next) => {
+  const jsFolder = "./chatwidget/dist/assets";
+  const cssFolder = "./chatwidget/dist/assets";
+
+  let jsFiles = [];
+  let cssFiles = [];
+
+  // Fetch all JS files
+  fs.readdirSync(jsFolder).forEach((eachFile) => {
+    if (eachFile.endsWith(".js")) {
+      jsFiles.push(`/assets/${eachFile}`); // Include path for serving
+    }
   });
 
-  app.get("/getfiles", (req, res, next) => {
-    const jsFolder = "./chatwidget/dist/assets";
-    const cssFolder = "./chatwidget/dist/assets";
-  
-    let jsFiles = [];
-    let cssFiles = [];
-  
-    // Fetch all JS files
-    fs.readdirSync(jsFolder).forEach((eachFile) => {
-      if (eachFile.endsWith(".js")) {
-        jsFiles.push(`/assets/${eachFile}`); // Include path for serving
-      }
-    });
-  
-    // Fetch all CSS files
-    fs.readdirSync(cssFolder).forEach((eachFile) => {
-      if (eachFile.endsWith(".css")) {
-        cssFiles.push(`/assets/${eachFile}`); // Include path for serving
-      }
-    });
-  
-    res.send({
-      jsFiles,
-      cssFiles,
-    });
+  // Fetch all CSS files
+  fs.readdirSync(cssFolder).forEach((eachFile) => {
+    if (eachFile.endsWith(".css")) {
+      cssFiles.push(`/assets/${eachFile}`); // Include path for serving
+    }
   });
-  
+
+  res.send({
+    jsFiles,
+    cssFiles,
+  });
+});
 
 console.log(process.env.PORT);
 // Start the server
