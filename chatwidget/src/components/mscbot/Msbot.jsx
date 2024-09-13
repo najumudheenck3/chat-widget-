@@ -53,12 +53,17 @@ const Msbot = () => {
 
   useEffect(() => {
     const getChatData = async () => {
-      const { data } = await axios.get(ENDPOINT + "/allMessages");
-      if (data && data.status === false) {
+      const chatId = localStorage.getItem("chatId");
+      if (chatId) {
+        const { data } = await axios.get(ENDPOINT + `/allMessages/${chatId}`);
+        if (data && data.status === false) {
+          setChatMessages([]);
+        }
+        if (data.status) {
+          setChatMessages(data.data);
+        }
+      } else {
         setChatMessages([]);
-      }
-      if (data.status) {
-        setChatMessages(data.data);
       }
     };
     getChatData();
@@ -84,7 +89,7 @@ const Msbot = () => {
     if (userText !== "" && isRegistered) {
       setUserInput("");
       const content = {
-        sender: "customer",
+        senderType: "customer",
         customerInfo: {
           name: customerInfo.name,
           mobile: customerInfo.contact,
@@ -92,10 +97,15 @@ const Msbot = () => {
         },
         ChatId: generateUniqueChatId(customerInfo.contact, customerInfo.email),
         content: userText,
-        timestamp: getTime(),
+        createdAt: new Date(),
       };
-      await axios.post(ENDPOINT + "/customerMessage", content);
-      setChatMessages((prevMessages) => [...prevMessages, content]);
+      const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
+      if (data.status) {
+        if (data.chatId) {
+          localStorage.setItem("chatId", data.chatId);
+          setChatMessages((prevMessages) => [...prevMessages, content]);
+        }
+      }
     }
   };
   // Function to generate a unique ChatId based on contact and email
@@ -112,20 +122,13 @@ const Msbot = () => {
     setShowEmojiPicker(!showEmojiPicker);
   };
 
-  const getTime = () => {
-    let today = new Date();
-    let hours = today.getHours();
-    let minutes = today.getMinutes();
-    if (hours < 10) hours = "0" + hours;
-    if (minutes < 10) minutes = "0" + minutes;
-    return hours + ":" + minutes;
-  };
-
   const renderChatMessages = () => {
     return chatMessages?.map((message, index) => (
       <div key={index}>
-        <h5 className="chat-timestamp">{message.timestamp}</h5>
-        <p className={message.sender === "bot" ? "botText" : "userText"}>
+        <h5 className="chat-timestamp">
+          {new Date(message.createdAt).toLocaleTimeString()}{" "}
+        </h5>
+        <p className={message.senderType === "user" ? "botText" : "userText"}>
           <span>{message.content}</span>
         </p>
       </div>
@@ -162,7 +165,9 @@ const Msbot = () => {
     }
   }, [chatMessages]);
   return (
-    <div className="chat-bar-collapsible">
+    <div
+      className={`chat-bar-collapsible ${chatOpen ? "chat-open" : "chat-closed"}`}
+    >
       {!chatOpen ? (
         <button
           id="chat-button"
@@ -274,9 +279,9 @@ const Msbot = () => {
                 </div>
               )}
 
-              <div id="chat-bar-bottom">
+              {/* <div id="chat-bar-bottom">
                 <p></p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

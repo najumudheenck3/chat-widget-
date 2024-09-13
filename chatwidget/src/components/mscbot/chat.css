@@ -2,7 +2,14 @@
   position: fixed;
   bottom: 0;
   right: 50px;
-  /* box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2); */
+}
+
+.chat-closed {
+  box-shadow: none;
+}
+
+.chat-open {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
 #chat-button,
@@ -91,7 +98,7 @@
 }
 
 #chat-icon:hover {
-  opacity: .7;
+  opacity: 0.7;
 }
 
 #userInput {
@@ -127,7 +134,7 @@
   border-bottom-right-radius: 2px;
   max-width: 80%;
   margin-right: 10px;
-  animation: floatup .5s forwards;
+  animation: floatup 0.5s forwards;
 }
 
 .botText {
@@ -147,7 +154,7 @@
   border-bottom-left-radius: 2px;
   max-width: 80%;
   margin-left: 10px;
-  animation: floatup .5s forwards;
+  animation: floatup 0.5s forwards;
 }
 
 .emoji-picker-container {
@@ -228,7 +235,7 @@
 @keyframes floatup {
   from {
     transform: translateY(14px);
-    opacity: .0;
+    opacity: 0;
   }
 
   to {

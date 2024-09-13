@@ -90,28 +90,42 @@ function initializeSocket(serverInstance) {
   return io; // Return the io instance
 }
 
-
 // Initializing Socket.IO
 const io = initializeSocket(serverInstance);
 
-const chatMessages = [];
 app.get("/sample", (req, res, next) => {
   return res.send({
     status: true,
     message: "oka oka",
   });
 });
-app.get("/allMessages", (req, res, next) => {
-  return res.send({
-    status: true,
-    data: chatMessages,
-  });
+app.get("/allMessages/:chatId", async (req, res, next) => {
+  try {
+    const chatId = req.params.chatId;
+    console.log(chatId,"chatisdsd");
+    const url = `http://localhost:5008/convapi/customer/message/${chatId}?web=true`;
+    const headers = {
+      "token-id": process.env.outboundAppToken,
+      "client-id": process.env.outboundAppClient,
+    };
+    const {data} = await axios.get(url, {
+      headers,
+    });
+    return res.send({
+      status: true,
+      data: data,
+    });
+  } catch (error) {
+    console.error("Error getting all messages:", error);
+    return res.status(200).send({
+      status: false,
+      message: error.message,
+    });
+  }
 });
 
 app.post("/customerMessage", async (req, res, next) => {
   try {
-    // Add the incoming message to the chatMessages array
-    chatMessages.push(req.body);
     console.log("req.body", req.body);
 
     // Send the payload (req.body) to the outbound webhook URL
@@ -141,37 +155,32 @@ app.post("/customerMessage", async (req, res, next) => {
         "client-id": process.env.outboundAppClient,
       };
 
-    const serverRes= await axios.post(webhookUrl, chatPayload, {
+      const serverRes = await axios.post(webhookUrl, chatPayload, {
         headers,
       });
-      let chatId=0;
-      if (serverRes.status==200){
-         chatId = serverRes.data.id;
-         return res.send({
-           status: true,
-           content: serverRes.data,
-           chatId: chatId,
-           message: "Message sent and forwarded to the webhook",
-         });
-        }else{
-          return res.send({
-            status: true,
-            content: responseContent,
-            chatId: chatId,
-            message: "Message Not forwarded to the webhook",
-          });
-        }
-      console.log('serverRes', serverRes);
+      let chatId = null;
+      if (serverRes.status == 200) {
+        chatId = serverRes.data.id;
+        return res.send({
+          status: true,
+          content: serverRes.data,
+          chatId: chatId,
+          message: "Message sent and forwarded to the webhook",
+        });
+      } else {
+        return res.send({
+          status: false,
+          content: responseContent,
+          chatId: chatId,
+          message: "Message Not forwarded to the webhook",
+        });
+      }
     } else {
       responseContent =
         "Message Not forwarded to the webhook: no customer Data";
     }
-
-    // Respond to the client that the message was sent successfully
-    
   } catch (error) {
     console.error("Error sending to webhook:", error.message);
-    // Handle the error and respond with an appropriate message
     return res.status(200).send({
       status: true,
       message: "webhook Error",
@@ -182,21 +191,12 @@ app.post("/customerMessage", async (req, res, next) => {
 app.post("/userMessage", (req, res, next) => {
   // Get the current time
   const currentTime = new Date();
-  const hours = currentTime.getHours().toString().padStart(2, "0");
-  const minutes = currentTime.getMinutes().toString().padStart(2, "0");
-  const formattedTime = `${hours}:${minutes}`;
   console.log("req.body", req.body);
-  chatMessages.push({
-    sender: "bot",
-    content: req.body.message.content,
-    timestamp: formattedTime, // Use the dynamically generated time here
-  });
   io.sockets.emit("message received", {
-    sender: "bot",
+    senderType: "user",
     content: req.body.message.content,
-    timestamp: formattedTime, // Use the dynamically generated time here
+    createdAt: currentTime, 
   });
-  console.log(chatMessages.length);
   return res.send({
     message: "oka oka",
   });
