@@ -195,7 +195,7 @@ app.post("/customerMessage", async (req, res, next) => {
   } catch (error) {
     console.error("Error sending to webhook:", error.message);
     return res.status(200).send({
-      status: true,
+      status: false,
       message: "webhook Error",
     });
   }

@@ -177,12 +177,29 @@ const renderChatMessages = () => {
         {message.status === "failed" && (
           <span>
             Failed to send.{" "}
-            {/* <button onClick={() => retryMessage(message)}>Retry</button> */}
+            <button onClick={() => retryMessage(message)}>Retry</button>
           </span>
         )}
       </div>
     </div>
   ));
+};
+const retryMessage = async (failedMessage) => {
+  try {
+    const { data } = await axios.post(ENDPOINT + "/customerMessage", failedMessage);
+
+    if (data.status) {
+      setChatMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.createdAt === failedMessage.createdAt
+            ? { ...msg, status: "sent" }
+            : msg
+        )
+      );
+    }
+  } catch (error) {
+    console.error("Error retrying message:", error);
+  }
 };
 
 
