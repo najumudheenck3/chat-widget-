@@ -94,28 +94,7 @@ function initializeSocket(serverInstance) {
 // Initializing Socket.IO
 const io = initializeSocket(serverInstance);
 
-const chatMessages = [
-  {
-    sender: "user",
-    content: "hi",
-    timestamp: "16:38",
-  },
-  {
-    sender: "bot",
-    content: "Try asking something else!",
-    timestamp: "16:38",
-  },
-  {
-    sender: "user",
-    content: "hello",
-    timestamp: "16:38",
-  },
-  {
-    sender: "bot",
-    content: "Hello there!",
-    timestamp: "16:38",
-  },
-];
+const chatMessages = [];
 app.get("/sample", (req, res, next) => {
   return res.send({
     status: true,
@@ -162,20 +141,34 @@ app.post("/customerMessage", async (req, res, next) => {
         "client-id": process.env.outboundAppClient,
       };
 
-      await axios.post(webhookUrl, chatPayload, {
+    const serverRes= await axios.post(webhookUrl, chatPayload, {
         headers,
       });
+      let chatId=0;
+      if (serverRes.status==200){
+         chatId = serverRes.data.id;
+         return res.send({
+           status: true,
+           content: serverRes.data,
+           chatId: chatId,
+           message: "Message sent and forwarded to the webhook",
+         });
+        }else{
+          return res.send({
+            status: true,
+            content: responseContent,
+            chatId: chatId,
+            message: "Message Not forwarded to the webhook",
+          });
+        }
+      console.log('serverRes', serverRes);
     } else {
       responseContent =
         "Message Not forwarded to the webhook: no customer Data";
     }
 
     // Respond to the client that the message was sent successfully
-    return res.send({
-      status: true,
-      content: responseContent,
-      message: "Message sent and forwarded to the webhook",
-    });
+    
   } catch (error) {
     console.error("Error sending to webhook:", error.message);
     // Handle the error and respond with an appropriate message
