@@ -103,7 +103,11 @@ app.get("/allMessages/:chatId", async (req, res, next) => {
   try {
     const chatId = req.params.chatId;
     console.log(chatId,"chatisdsd");
-    const url = `http://localhost:5008/convapi/customer/message/${chatId}?web=true`;
+    const baseUrl = process.env.inboundWebhook; // Read inboundWebhook from .env file
+     if (!baseUrl) {
+       throw new Error("Inbound Webhook URL is not defined in .env");
+     }
+    const url = `${baseUrl}/${chatId}?web=true`;
     const headers = {
       "token-id": process.env.outboundAppToken,
       "client-id": process.env.outboundAppClient,
