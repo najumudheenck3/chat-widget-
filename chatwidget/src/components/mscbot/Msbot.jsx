@@ -84,30 +84,65 @@ const Msbot = () => {
     }
   };
 
-  const handleSendButton = async () => {
-    const userText = userInput.trim();
-    if (userText !== "" && isRegistered) {
-      setUserInput("");
-      const content = {
-        senderType: "customer",
-        customerInfo: {
-          name: customerInfo.name,
-          mobile: customerInfo.contact,
-          email: customerInfo.email,
-        },
-        ChatId: generateUniqueChatId(customerInfo.contact, customerInfo.email),
-        content: userText,
-        createdAt: new Date(),
-      };
+const handleSendButton = async () => {
+  const userText = userInput.trim();
+  if (userText !== "" && isRegistered) {
+    setUserInput("");
+
+    const content = {
+      senderType: "customer",
+      customerInfo: {
+        name: customerInfo.name,
+        mobile: customerInfo.contact,
+        email: customerInfo.email,
+      },
+      ChatId: generateUniqueChatId(customerInfo.contact, customerInfo.email),
+      content: userText,
+      createdAt: new Date(),
+      status: "pending", // Mark as pending initially
+    };
+
+    setChatMessages((prevMessages) => [...prevMessages, content]);
+
+    try {
       const { data } = await axios.post(ENDPOINT + "/customerMessage", content);
+
       if (data.status) {
+        // Update the message to 'sent' status on success
+        setChatMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.createdAt === content.createdAt
+              ? { ...msg, status: "sent" }
+              : msg
+          )
+        );
         if (data.chatId) {
           localStorage.setItem("chatId", data.chatId);
-          setChatMessages((prevMessages) => [...prevMessages, content]);
         }
+      } else {
+        // Update message status to 'failed' if the message was not successfully sent
+        setChatMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.createdAt === content.createdAt
+              ? { ...msg, status: "failed" }
+              : msg
+          )
+        );
       }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // On failure, mark the message as 'failed'
+      setChatMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.createdAt === content.createdAt
+            ? { ...msg, status: "failed" }
+            : msg
+        )
+      );
     }
-  };
+  }
+};
+
   // Function to generate a unique ChatId based on contact and email
   const generateUniqueChatId = (contact, email) => {
     const combined = `${contact}-${email}`;
@@ -122,18 +157,34 @@ const Msbot = () => {
     setShowEmojiPicker(!showEmojiPicker);
   };
 
-  const renderChatMessages = () => {
-    return chatMessages?.map((message, index) => (
-      <div key={index}>
-        <h5 className="chat-timestamp">
-          {new Date(message.createdAt).toLocaleTimeString()}{" "}
-        </h5>
-        <p className={message.senderType === "user" ? "botText" : "userText"}>
-          <span>{message.content}</span>
-        </p>
+const renderChatMessages = () => {
+  return chatMessages?.map((message, index) => (
+    <div key={index} className="chat-message">
+      {/* Display the timestamp */}
+      <h5 className="chat-timestamp">
+        {new Date(message.createdAt).toLocaleTimeString()}{" "}
+      </h5>
+
+      {/* Display the message content */}
+      <p className={message.senderType === "user" ? "botText" : "userText"}>
+        <span>{message.content}</span>
+      </p>
+
+      {/* Show message status */}
+      <div className="message-status">
+        {message.status === "pending" && <span>Sending...</span>}
+        {message.status === "sent" && <span>✔ Sent</span>}
+        {message.status === "failed" && (
+          <span>
+            Failed to send.{" "}
+            {/* <button onClick={() => retryMessage(message)}>Retry</button> */}
+          </span>
+        )}
       </div>
-    ));
-  };
+    </div>
+  ));
+};
+
 
   const handleRegisterCustomer = () => {
     const { name, contact, email } = customerInfo;

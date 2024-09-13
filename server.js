@@ -115,10 +115,19 @@ app.get("/allMessages/:chatId", async (req, res, next) => {
     const {data} = await axios.get(url, {
       headers,
     });
-    return res.send({
-      status: true,
-      data: data,
-    });
+    // console.log('data', data.chatDetails);
+    if (data.chatDetails.closed){
+      return res.send({
+        status: true,
+        data: [],
+      });
+    }else{
+      return res.send({
+        status: true,
+        data: data.messagesInChat,
+      });
+    }
+    
   } catch (error) {
     console.error("Error getting all messages:", error);
     return res.status(200).send({
